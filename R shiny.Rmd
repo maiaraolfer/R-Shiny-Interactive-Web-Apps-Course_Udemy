@@ -1,0 +1,569 @@
+---
+title: "R Shiny"
+output: html_document
+runtime: shiny
+---
+
+**#R Shiny Interactive Web Apps - Next level data visualization**
+
+**##R-Tutorials Training course from Udemy.**
+
+###\*\*Section 1 - Course introduction
+
+All shiny apps have the same script structure.
+Server function consists of an 'input', 'output' and 'session' arguments and it specifies the calculations performed in an app.
+For the calculations, the server that runs the app must have R and all required packages installed (like shinyapps.io).
+Input argument have pre-set widgets, such as sliders, buttons, text fields.
+The input is used for the server calculations and it needs to be specified in the ui (user interface) as well.
+Output argument is calculated in the server and the result is sent to the ui, where it is displayed.
+Each component that goes from server to user interface needs an object ID.
+Session argument contains the session information.
+For very basic apps, this argument is not required.
+When there is no reactivity going on in the app and the server doesn't need to calculate user specified data, this argument can be ommited.
+However, this is not advised.
+The user interface generally have several preset page layouts available.
+For simple apps you can use basicPage, but most of the time you will see the fluidPage, which adapts automatically to a given browser.
+As the name suggests, this is the place where you define what the user sees.
+It can have static contents like headers, texts and graphs, and interactive components like sliders and interactive graphs.
+
+```{r}
+library(shiny)
+
+server = function(input,output,session) {} #server
+
+ui = basicPage("My first app") # user interface
+
+shinyApp(ui = ui, server = server) # app launch 
+```
+
+To deploy the app in a server proper script naming convention is required.
+For Mono scripts - 'server' + 'ui' in the same R script, you can use 'app.R'.
+This is recommended for short and standard scripts.
+For double script you may have 'server.R' and 'ui.R'.
+This convention assures that shiny server knows which script to implement.
+If you will run only locally you can name it whatever you want.
+
+\####**Input widgets gallery**
+
+The user interaction in the app needs at least one component that allows user input, which are called widgets.
+Shiny has several widgets already modeled, thus we only need to know their names and how to integrate them.
+Each widget is a function in the shiny package, meaning that there are specific arguments for these functions.
+Some arguments are the same, for example, the input ID, which is the name you ascribe to the input feature, other arguments can be unique to specific widget.
+You can check the most used widgets in the widget gallery at Shiny by RStudio website.
+Usual widgets are date input and date range which allows you to select a data or a date range, file input which allows you to upload a file, text input.
+For numbers you can use numeric input, slider input, slider range.
+Checkbox input and checkbox group input are not easily recognized as numeric input, but it provides a Boolean vector (True or False) and integer output (1,2,3) respectively.
+These can be used to determine groups, factors or even gradient with high to low values.
+The difference between these two is that the checkbox input is simply binary, while checkbox group input lets you set several checkbox options.
+Other similar option is the select box input.
+The difference between a checkbox group and a select box is the fact that in the checkbox group multiple inputs are available and the select box inputs allows the user to select only one option (in default settings).
+Although it's possible to use multiple argument to enable multi-item selection in a select box input.
+There is also the radio buttons, but with input there is no option for multi-item selection, only single outputs are available.
+Last, we have the action buttons, which counts how often the button is pressed and provides the count as integers.
+
+####\*\*Link collection
+
+The course Project App
+
+<https://r-analytic.shinyapps.io/mining_proj/>
+
+1.  General intro material you can use parallel to this course
+
+General shiny video tutorial by RStudio
+
+<http://shiny.rstudio.com/tutorial/>
+
+Good text based tutorial by Zev Ross
+
+<http://zevross.com/blog/2016/04/19/r-powered-web-applications-with-shiny-a-tutorial-and-cheat-sheet-with-40-example-apps/>
+
+2.  Tutorials for some of the packages we use in the course
+
+datatables package - source of the DT package we are using in the course
+
+<https://www.datatables.net/reference/option/>
+
+The highcharter package with some examples
+
+<http://jkunst.com/highcharter/>
+
+Ggplot2 cheat sheet
+
+<https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf>
+
+3.  Resources to deploy/share your app
+
+Shinyapps.io is the default deployment platform for shiny
+
+<https://www.shinyapps.io/>
+
+Shiny server for your homegrown server supporting shiny
+
+<https://www.rstudio.com/products/shiny/shiny-server/>
+
+Shinyproxy as an alternative server solution to shiny server pro
+
+<http://www.shinyproxy.io/>
+
+4.  Shiny code resources
+
+Available shiny functions
+
+<http://shiny.rstudio.com/reference/shiny/latest/>
+
+The shiny input widget gallery
+
+<http://shiny.rstudio.com/gallery/widget-gallery.html>
+
+Shiny layout guide
+
+<http://shiny.rstudio.com/articles/layout-guide.html>
+
+All available help articles by RStudio
+
+<http://shiny.rstudio.com/articles/>
+
+5.  Advanced resources you will need when developing your own app
+
+Stackoverflow community for shiny related questions (best help source)
+
+<http://stackoverflow.com/questions/tagged/shiny>
+
+Shiny gallery including code for inspiration
+
+<http://shiny.rstudio.com/gallery/>
+
+More advanced shiny examples
+
+<https://www.rstudio.com/products/shiny/shiny-user-showcase/>
+
+###\*\*Section 2 - The basics of R shiny
+
+```{r}
+## Using input widgets
+
+server <- function(input,output, session) {
+}
+
+ui <-   basicPage(
+  h1("Using textInput and checkboxInput"), #header
+  textInput("mystring", "Write here"), 
+  #textInput(inputID = "name assigned to the widget",
+  #          label = text above the text box
+  #          value = initial value, width = size of the text box)
+  checkboxInput("mycheckbox", "Factor Y") #check box
+  # checkboxInpout(inputID, label, value) - same arguments!
+)
+
+shinyApp(ui = ui, server = server)
+
+```
+
+####\*\*Integrating server input widgets
+
+-   User interface: input widgets make the app interactive. However, the server does not react if the input is not integrated, thus the information from the user interface needs to be integrated in the 'server' code. Functions to choose from: observe(), reactive(), render(). Observe function is mainly used if you want your app to react to the values the user inputs. Basically, we're talking about reactions like updates to text boxes, pull downs. We do not want to use observe() to return newly created data or values. There is a slightly modified form of the observe function called observeEvent(), which specifies events that trigger the reaction. Render on the other hand is a whole family of shiny functions. It's a core componente of the shiny package that allows you to display outputs at the user interface. Main functios are renderPlot() and renderText() combined with plotOutput and textOutput. Last, reactive is like a R function within shiny. For reactive() to run there needs to be some user interaction. Usually you would store a reactive as an object and use it in the server.
+
+```{r}
+## Making the app reactive
+
+server <- function(input, output, session) {
+  observe({
+    addtext <- paste("your initial input:", input$mystring)
+    updateTextInput(session, "mystring2", value=addtext)
+  })
+  }
+
+ui <-   basicPage(
+  h1("Using Observe"),
+  textInput("mystring", "Write here"),
+  textInput("mystring2", "Full App Output")
+)
+
+shinyApp(ui = ui, server = server)
+
+
+```
+
+```{r}
+
+
+## using reactive and render in one app
+
+server <- function(input, output, session) {
+ 
+  data <- reactive({
+     rnorm(50) * input$myslider # 50 random numbers multiplied by the input in the slider
+  })
+ 
+  output$plot <- renderPlot({
+    plot(data(), col = "red", pch = 21, bty = "n") #color, point type and box type of the plot.
+  }) # you can use ggplot2 here # data() leads right to the reactive function.
+}
+
+ui <- basicPage(
+  h1("Using Reactive"),
+  sliderInput(inputId = "myslider",
+              label = "Slider1",
+              value = 1, min = 1, max = 20), #slider from 1 to 20
+  plotOutput("plot") #plot was constructed in the output
+)
+
+shinyApp(ui = ui, server = server)
+
+
+
+## layouting - basic sidebar layout
+
+server <- function(input, output, session) {}
+
+ui <- fluidPage(
+ 
+  sidebarLayout(
+    
+    sidebarPanel(
+      "my sidebar"
+    ),
+    
+    mainPanel(
+      "my mainpanel"
+    )
+  )
+)
+
+shinyApp(ui = ui, server = server)
+
+
+
+## layouting - tabsets
+
+server <- function(input, output, session) {}
+
+ui <- fluidPage(
+ 
+  titlePanel("using Tabsets"), # our title
+ 
+  sidebarLayout( #sidebarLayout needs a sidebarPanel and mainPanel
+    
+    sidebarPanel(
+      sliderInput(inputId = "s1", #name of the slider
+                  label = "My Slider", # label to appear for user
+                  value = 1, min = 1, max = 20) #slider starts at one and it goes up to 20.
+    ),
+    
+    mainPanel(
+      tabsetPanel( # use tabsetPanel if you want multiple tabs, like excel sheets or pages
+        tabPanel("Tab1", "First Tab"), # the sidebarPanel stays the same for all the tabs. 
+        tabPanel("Tab2", "Second Tab"),
+        tabPanel("Tab3", "Third Tab")
+      )
+    )
+  )
+)
+
+shinyApp(ui = ui, server = server)
+
+
+```
+
+Behind the scenes a part of your code is translated into HTML by Shiny.
+This is required since the ui is user facing on the web, thus needs to run on a web language like HTML, CSS, JavaScript.
+Luckily it doesn't matter if you know HTML or not.
+For one, HTML is not very complicated and furthermore, R translates it for you as mentioned.
+However, if you want to code your layout on HTML, you are free to do so, by using the HTML function within shiny.
+For this course we will not use HTML language, we will go with the shiny way.
+There are things called HTML tags which helps you to give a specific format to your input.
+Each tag does a specific thing to your input, for example, H1 and H2 tags are different header formats of HTML, or iframes which embed content from a web page into your app.
+There are also audio tags to place audio files, different font types, tags for links etc.
+Basically everything you want to embed into your website or app has some sort of HTML tag and shiny offers over 100 of those tags.
+You can use *'names(tags)'* you can have a list of tags available.
+Most used tags with direct functions are:
+
+-   a: hyperlink
+-   br: line break
+-   code: computer code as text
+-   div: section divisions
+-   em: emphasizing text
+-   h1 to h6: headers
+-   hr: add horizontal line
+-   img: add image
+-   p: defining a paragraph or block of text
+-   pre: pre-formatted text
+-   span: group of line elements
+-   strong: bold text
+
+Other HTML tags need to be called as 'tags\$name()' because the name of these tags were already occupied within R.
+There is an option if you want to use several tags using 'withTags()'.
+
+```{r}
+####
+
+names(tags) 
+
+## Tags
+
+server <- function(input, output, session) {}
+
+ui <- fluidPage(
+ 
+  titlePanel(strong("This is the STRONG tag on the Title")), # using strong as a direct tag (that the title is in bold now)
+ 
+  sidebarLayout(
+    
+    sidebarPanel(
+      withTags( #calling multiple tags at once. 
+        # without it, it would be necessary to call each function with tags$name() (tags$b() at line 298 for example)
+      div( #dividing sections 
+          b("bold text: here you see a line break, a horizontal line and some code"),
+          br(), #line break (text go to the next line)
+          hr(), #adding a horizontal line;
+        # é possivel ainda personalizar a linha, por exemplo com codigo CSS: tags$hr(style = "border-top: 2px solid black;") 
+        # que deixa a linha na cor preta, continua e mais grossa. 
+        # 2px = espessura da linha; solid = linha continua; black = cor (pode usar red, blue e até codigos como #FF0000)
+          code("plot(lynx)") # writing code as text
+    ))),
+    
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Weblinks with direct tag a", a(href="www.r-tutorials.com", "r-tutorials")), #using hyperlink
+        tabPanel(tags$b("Using b for bold text"), tags$b("a bold text")), #using bold text
+        tabPanel("Citations with the blockquote tag", tags$blockquote("R is Great", cite = "R Programmer")) #citation with blockquote tag
+      )
+    )
+))
+
+shinyApp(ui = ui, server = server)
+```
+
+Now that we already learn how to define the general layout and how to use HTML tags to format our shiny app, it is time to look at styles and themes available.
+There are pre-defined themes available in 'shinythemes' package. You can self code your theme customizing it with CSS, either importing CSS file into the script (e.g. 'importCSS()') or using 'inlineCSS()' function from 'shinyjs' package or even using CSS in the head tag.
+
+```{r}
+## changing the themes
+
+server <- function(input, output, session) {}
+
+library(shinythemes) # calling the package
+
+ui <- fluidPage(themeSelector(), # displaying the different themes, replace this line when publishing with theme = shinytheme("darkly")
+ 
+  titlePanel(strong("This is the STRONG tag on the Title")), # using strong as a direct tag
+ 
+  sidebarLayout(
+    
+    sidebarPanel(
+      withTags(
+        div(
+          b("bold text: here you see a line break, a horizontal line and some code"),
+          br(),
+          hr(),
+          code("plot(lynx)")
+        ))),
+    
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Weblinks with direct tag a", a(href="www.r-tutorials.com", "r-tutorials")),
+        tabPanel(tags$b("Using b for bold text"), tags$b("a bold text")),
+        tabPanel("Citations with the blockquote tag", tags$blockquote("R is Great", cite = "R Programmer"))
+      )
+    )
+  ))
+
+shinyApp(ui = ui, server = server)
+```
+
+###\*\*Section 3 - Publishing and advanced concepts of Shiny
+
+
+
+```{r}
+## Simple datatable
+
+library(shiny)
+library(ggplot2)
+library(DT)
+
+server <- function(input, output, session) {
+ 
+  output$tableDT <- DT::renderDataTable(diamonds[1:1000,],
+                                        options = list(paging=F),
+                                        rownames=F,
+                                        filter = "top")
+ 
+}
+
+ui <- fluidPage(
+  DT::dataTableOutput("tableDT")
+)
+
+shinyApp(ui = ui, server = server)
+
+## Datatable styling
+
+library(shiny)
+library(ggplot2)
+library(DT)
+
+server <- function(input, output, session) {
+ 
+ 
+  output$tableDT <- DT::renderDataTable(datatable(diamonds[1:1000,],
+                                                  options = list(paging=F),
+                                                  rownames=F,
+                                                  filter = "top") %>%
+                                          formatCurrency("price", "$") %>%
+                                          formatStyle("price", color = "green") %>%
+                                          formatStyle("cut",
+                                                      transform = "rotateX(20deg) rotateY(5deg) rotateZ(5deg)",
+                                                      backgroundColor = styleEqual(
+                                                        unique(diamonds$cut), c("salmon", "lightblue",
+                                                                                "grey", "lightgreen", "lightpink"))))
+                                        
+ 
+}
+
+ui <- fluidPage(
+  DT::dataTableOutput("tableDT")
+)
+
+shinyApp(ui = ui, server = server)
+
+
+
+
+
+## Advanced App - brush
+
+server <- function(input,output, session) {
+  
+
+library(ggplot2) # for the diamonds dataset, and ggplot feature
+  library(DT) # for the dataTableOutput
+  library(shiny) # should always be activated
+
+
+  output$plot <- renderPlot({
+    ggplot(diamonds, aes(price, carat)) + geom_point()
+  })
+ 
+  diam <- reactive({
+    
+    user_brush <- input$user_brush
+    sel <- brushedPoints(diamonds, user_brush)
+    return(sel)
+    
+  })
+ 
+  output$table <- DT::renderDataTable(DT::datatable(diam()))
+}
+
+ui <-   fluidPage(
+  h1("Using the brush feature to select specific observations"),
+  plotOutput("plot", brush = "user_brush"),
+  dataTableOutput("table")
+  )
+
+shinyApp(ui = ui, server = server)
+
+## Advanced App - click
+
+server <- function(input,output, session) {
+ 
+  library(ggplot2) # for the diamonds dataset, and ggplot feature
+  library(DT) # for the dataTableOutput
+ 
+  output$plot <- renderPlot({
+    ggplot(diamonds, aes(price, carat)) + geom_point()
+  })
+ 
+  diam <- reactive({
+    
+    user_click <- input$user_click
+    sel <- nearPoints(diamonds, user_click, threshold = 10, maxpoints = 5)
+    # maxpoints gives the maximum number of observations in the table
+    # threshold gives the maximum distance in the dataset
+    return(sel)
+    
+  })
+ 
+  output$table <- DT::renderDataTable(DT::datatable(diam()))
+}
+
+ui <-   fluidPage(
+  h1("Using the click feature to select specific observations"),
+  plotOutput("plot", click = "user_click"),
+  dataTableOutput("table")
+)
+
+shinyApp(ui = ui, server = server)
+
+
+
+## Advanced Plot with csv export
+
+server <- function(input,output, session) {
+ 
+  library(ggplot2) # for the diamonds dataset, and ggplot feature
+  library(DT) # for the dataTableOutput
+ 
+  output$plot <- renderPlot({
+    
+    ggplot(diamonds, aes(price, carat)) + geom_point()
+    
+  })
+ 
+  diam <- reactive({
+    
+    user_brush <- input$user_brush
+    sel <- brushedPoints(diamonds, user_brush)
+    return(sel)
+    
+  })
+ 
+  output$table <- DT::renderDataTable(DT::datatable(diam()))
+ 
+  output$mydownload <- downloadHandler(
+    filename = "plotextract.csv",
+    content = function(file) {
+      write.csv(diam(), file)})
+}
+
+ui <- fluidPage(
+  h3("Exporting Data as .csv"),
+  plotOutput("plot", brush = "user_brush"),
+  dataTableOutput("table"),
+  downloadButton(outputId = "mydownload", label = "Download Table")
+)
+
+shinyApp(ui = ui, server = server)
+
+
+
+## Media Integration
+
+library(shiny)
+
+server = function(input,output) {
+}
+
+ui = navbarPage("Integration of different media types",
+                
+  tabPanel("Image sourced locally",
+           tags$img(src = "logo.png", width = "100px", height = "100px")),
+ 
+  tabPanel("Video sourced locally",
+           tags$video(src = "comist.mp4", type = "video/mp4", controls = T,
+                      width = "900px", height = "800px")),
+ 
+  tabPanel("Pdf sourced online, Iframe",
+           tags$iframe(style="height:600px; width:100%; scrolling=yes",
+                       src="https://cran.r-project.org/web/packages/shiny/shiny.pdf")),
+ 
+  tabPanel("Text as .txt",
+           includeText("mytxt.txt"))
+)
+
+shinyApp(ui = ui, server = server)
+```
+
+
+###\*\*Section 4 - Course project
