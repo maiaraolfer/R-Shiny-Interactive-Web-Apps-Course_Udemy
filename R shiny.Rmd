@@ -373,6 +373,10 @@ shinyApp(ui = ui, server = server)
 
 ###\*\*Section 3 - Publishing and advanced concepts of Shiny
 
+Since Shiny produces interactive graphs, the publishing options are very important. The most interest part of Shiny applications is that the end user does not need R programming skills to use it. In fact, there is no need for the end user to even knows what R Shiny is, so the developer does all the coding part but the end user can still manipulate the data and output as needed. However, there is a key thing to keep in mind: R, shiny and all required packages must be installed on the server in order to make the app work. You can setup your own server or use RStudio's server (shinyapps.io). Before publishing you can test your code by running it in R Studio and view in the Viewer panel or in a new window.
+
+Lets talk about data tables now. In some apps you might want to add a datatable within an app or perhaps the datatable is the whole app. This tools is very well implemented in Shiny but there are some pitfalls that we should be aware of. Shiny itself has a function called 'renderDataTable()' which sets up a data table in the user interface. The function works fine but the DT package also has this function and when the packages are loaded, depending on the order that we require them, there might be an overlap. To solve this it's important to always call the DT function as 'DT::renderDataTable()' and make sure that Shiny package is called before DT package. DT package is preferential in this case because the data tables generated are interactive and visually better, and DT can integrate javaScript library DataTables into R. Visit [JavaScript's DataTable documentation](https://datatables.net) or [Rstudio's DT package documentation](rstudio.github.io/dt) for more info.
+
 
 
 ```{r}
@@ -384,15 +388,15 @@ library(DT)
 
 server <- function(input, output, session) {
  
-  output$tableDT <- DT::renderDataTable(diamonds[1:1000,],
-                                        options = list(paging=F),
-                                        rownames=F,
-                                        filter = "top")
+  output$tableDT <- DT::renderDataTable(expr = diamonds[1:1000,], #using just the first 1000 observations
+                                        options = list(paging=F), #no paging; all information are in one scrollable page
+                                        rownames=F, #no rownames
+                                        filter = "top") #filter in the top of the columns
  
 }
-
+# this whole app is just a data table. There are no sidebars, just a fluidPage with a table.
 ui <- fluidPage(
-  DT::dataTableOutput("tableDT")
+  DT::dataTableOutput("tableDT") #remember to use DT::function() to call the functions correctly
 )
 
 shinyApp(ui = ui, server = server)
@@ -405,16 +409,16 @@ library(DT)
 
 server <- function(input, output, session) {
  
- 
-  output$tableDT <- DT::renderDataTable(datatable(diamonds[1:1000,],
-                                                  options = list(paging=F),
-                                                  rownames=F,
-                                                  filter = "top") %>%
-                                          formatCurrency("price", "$") %>%
-                                          formatStyle("price", color = "green") %>%
-                                          formatStyle("cut",
-                                                      transform = "rotateX(20deg) rotateY(5deg) rotateZ(5deg)",
-                                                      backgroundColor = styleEqual(
+ # diamonds is a dataset grom ggplot2 containing the prices and other attributes of over 50 thousand diamonds.
+  output$tableDT <- DT::renderDataTable(datatable(diamonds[1:1000,], #observations 1 to 1000 rows, all columns
+                                                  options = list(paging=F), #no paging = all data in one page
+                                                  rownames=F, 
+                                                  filter = "top") %>% # %>% adds layer by layer, like ggplot2
+                                          formatCurrency("price", "$") %>% # format 'price' in USD
+                                          formatStyle("price", color = "green") %>% # format color
+                                          formatStyle("cut", #style 'cut' column
+                                                      transform = "rotateX(20deg) rotateY(5deg)  rotateZ(5deg)",
+                                                      backgroundColor = styleEqual( # each group of cuts has a color
                                                         unique(diamonds$cut), c("salmon", "lightblue",
                                                                                 "grey", "lightgreen", "lightpink"))))
                                         
@@ -428,17 +432,17 @@ ui <- fluidPage(
 shinyApp(ui = ui, server = server)
 
 
-
-
-
+# there are other functions to format table columns: formatCurrency, formatDate, formatString, formatRound etc. 
+```
+```{r}
 ## Advanced App - brush
-
+library(shiny) # should always be activated
+library(ggplot2) # for the diamonds dataset, and ggplot feature
+library(DT) # for the dataTableOutput
 server <- function(input,output, session) {
   
 
-library(ggplot2) # for the diamonds dataset, and ggplot feature
-  library(DT) # for the dataTableOutput
-  library(shiny) # should always be activated
+
 
 
   output$plot <- renderPlot({
@@ -452,7 +456,7 @@ library(ggplot2) # for the diamonds dataset, and ggplot feature
     return(sel)
     
   })
- 
+
   output$table <- DT::renderDataTable(DT::datatable(diam()))
 }
 
@@ -465,11 +469,11 @@ ui <-   fluidPage(
 shinyApp(ui = ui, server = server)
 
 ## Advanced App - click
-
+library(shiny)
+library(ggplot2) # for the diamonds dataset, and ggplot feature
+library(DT) # for the dataTableOutput
 server <- function(input,output, session) {
- 
-  library(ggplot2) # for the diamonds dataset, and ggplot feature
-  library(DT) # for the dataTableOutput
+  
  
   output$plot <- renderPlot({
     ggplot(diamonds, aes(price, carat)) + geom_point()
@@ -479,7 +483,7 @@ server <- function(input,output, session) {
     
     user_click <- input$user_click
     sel <- nearPoints(diamonds, user_click, threshold = 10, maxpoints = 5)
-    # maxpoints gives the maximum number of observations in the table
+    # max points gives the maximum number of observations in the table
     # threshold gives the maximum distance in the dataset
     return(sel)
     
@@ -499,7 +503,7 @@ shinyApp(ui = ui, server = server)
 
 
 ## Advanced Plot with csv export
-
+library(shiny)
 server <- function(input,output, session) {
  
   library(ggplot2) # for the diamonds dataset, and ggplot feature
